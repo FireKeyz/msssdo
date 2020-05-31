@@ -1,9 +1,10 @@
 import logging
-import sys
 import os
-import messages
-from pathlib import Path
+import sys
 from logging.handlers import TimedRotatingFileHandler
+from pathlib import Path
+
+import messages
 
 #Global Variables
 FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")

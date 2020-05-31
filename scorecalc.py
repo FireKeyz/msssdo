@@ -1,5 +1,6 @@
 import messages
 
+
 def fiftymetre_score(timeInSeconds):
 	if(timeInSeconds <= 8.0):
 	 	return 10

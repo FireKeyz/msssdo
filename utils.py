@@ -1,15 +1,16 @@
-import sqlite3
-import messages
-import scorecalc
 import configparser
-import os
 import csv
 import datetime
+import os
+import sqlite3
 from pathlib import Path
-from logman import logger
-from openpyxl import Workbook
-from openpyxl import load_workbook
 from tkinter import messagebox
+
+from openpyxl import Workbook, load_workbook
+
+import messages
+import scorecalc
+from logman import logger
 
 
 #Form a query to search based on Roll number and optionally Name
@@ -523,12 +524,3 @@ def verifySetup(prjroot, SERVER, CONFIG, BACKUPS, EXPORTS):
         logger.error(messages.UNEXPECTED_ERROR)
         logger.error("StackTrace : ",exc_info=True)
         return False
-    
-
-        
-        
-    
-    
-    
-    
-    

@@ -1,17 +1,18 @@
-from tkinter import ttk, Tk, Button, Frame, Label, LabelFrame, Entry, filedialog, PhotoImage, END
 import datetime
-import os
-import sys
-import sqlite3
-import scorecalc
-import messages
 import glob
-import utils
-from logman import logger, exitlogman
+import os
+import sqlite3
+import sys
 from pathlib import Path
-from tkinter import messagebox
+from tkinter import (END, Button, Entry, Frame, Label, LabelFrame, PhotoImage,
+                     Tk, filedialog, messagebox, ttk)
+
 from jproperties import Properties
 
+import messages
+import scorecalc
+import utils
+from logman import exitlogman, logger
 
 # Global static variables
 PROJECT_ROOT = os.getcwd()
