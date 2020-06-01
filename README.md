@@ -18,7 +18,7 @@ There are 4 main features :
 * **Backup Database**
   - After every time you quit the Application, there is a backup of all the databases you have created inside a folder with it's name as the *current date*
 
-##How is the MSSSDO setup?
+## How is the MSSSDO setup?
 * **Backups** : This folder stores the backup of the databases in a Dated folders
 * **Exports** : This folder is the default location for exported workbooks
 * **Storage** : This folder is used to hold the Databases created by the users from the Application
