@@ -321,10 +321,10 @@ def searchStudent(rollEntry, nameEntry, dataLabel):
     schema = utils.getSchemaFromTable(dbconn, currtable)
     
     if studentRecord == None:
-        logger.warn(messages.STUDENT_RECORD_EMPTY)
+        logger.warning(messages.STUDENT_RECORD_EMPTY)
         return
     if not schema:  
-        logger.warn(messages.SCHEMA_EMPTY)
+        logger.warning(messages.SCHEMA_EMPTY)
         return
 
     updateStudentDisplay(dataLabel, schema, studentRecord)
@@ -351,22 +351,41 @@ def updateStudentData(heightEntry, speedEntry, enduranceEntry, strengthEntry, ex
         messagebox.showerror(title="NO_STUDENT_CHOSEN", message=messages.NO_STUDENT_CHOSEN)
         return
 
-    updateQueries, recordDict = utils.getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpdist, agilitytime, recordDict)
+    dynamicRecordDict = recordDict.copy()
+
+    updateQueries, recordDict = utils.getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpdist, agilitytime, dynamicRecordDict)
     logger.info(messages.UPDATE_QUERY_NUM.format(len(updateQueries)))
     
-    finalupdatequery = utils.formUpdateQuery(currtable, updateQueries, recordDict)
+    if len(updateQueries) < 1:
+        logger.info(messages.NO_UPDATE_QUERIES)
+        del dynamicRecordDict
+        return
+    
+    finalupdatequery = utils.formUpdateQuery(currtable, updateQueries, dynamicRecordDict)
     logger.info(messages.UPDATE_QUERY.format(finalupdatequery))
     
     result = utils.updateTable(dbconn, finalupdatequery)
-    
+
     if result:
-        logger.info(messages.UPDATE_RECORD_PASS.format(finalupdatequery))
+        logger.info(messages.SPORT_UPDATE_PASSED)
+        totalscoreupdatequery = utils.updateTotalScore(currtable, dynamicRecordDict)
+        logger.info(messages.UPDATE_QUERY.format(totalscoreupdatequery))
+        
+        combinedresult = utils.updateTable(dbconn, totalscoreupdatequery)
+    else :
+        logger.error(messages.SPORT_UPDATE_FAILED)
+        combinedresult = False
+    
+    if combinedresult:
+        logger.info(messages.UPDATE_RECORD_PASS)
         dataLabel.config(text="Student Record was updated Successfully")
-        return
+        recordDict.update(dynamicRecordDict)
     else:
         messagebox.showerror(title="UPDATE_FAILED", message=messages.UPDATE_FAILED)
-        return
-    
+
+    del dynamicRecordDict
+    return
+
 # Updater Page element - Offers search and update functionality
 def updater():
 
@@ -770,7 +789,7 @@ homescreen()
 
 # Basic Root Window Initializations
 Logo = utils.resource_path(ATHLETE_ICON_FILE)
-window.iconphoto(True, PhotoImage(file=Logo))
+#window.iconphoto(True, PhotoImage(file=Logo))
 window.title('MSSSDO v1.0')
 window.geometry("750x850")
 window.protocol("WM_DELETE_WINDOW", quitapplication)

@@ -10,7 +10,7 @@ import messages
 FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
 LOG_FOLDER = "Logs"
 LOG_FILE = "msssdo.log"
-LOGGER_NAME = "loggy"
+LOGGER_NAME = "Logman"
 
 def get_file_handler():
    

@@ -49,7 +49,10 @@ NAME_EMPTY = "The Student Name field cannot be empty while loading the Data. Ple
 RECORD_EXISTS = "Student with same Roll-Number - {1} already exists in the Table - {0}"
 UPDATE_QUERY = "The Update Query for the current student record - {0}" 
 UPDATE_TABLE_FAILED = "The Student record could not be updated with the query - {0}"
-UPDATE_RECORD_PASS = "The Student record is updated with the query - {0}"
+UPDATE_RECORD_PASS = "The Student record is updated with both the UPDATE queries"
+SPORT_UPDATE_PASSED = "The Update Query for Individual Sports has passed. Total score update has started...."
+SPORT_UPDATE_FAILED = "The Update Query for Individual Sports has failed. Skipping Total score update...."
+NO_UPDATE_QUERIES = "There are no Update queries to form a query"
 CALL_HOME_SCREEN = "Returning to Homescreen... Commited latest changes to DB & cleared out persisted Student Records, Schemas etc"
 UNEXPECTED_ERROR = "The error observed was not expected"
 SERVER_FOLDER_CREATE = "Server Folder was created"
@@ -79,8 +82,6 @@ LOGGER_SHUTDOWN = "Quitting MSSSO Application. Shutting down the logger. Bye!"
 
 ################################# DATABASE & TABLE CREATION/SELECTION ###################################################
 NOT_A_DATABASE = "Chosen file is not a Database. Choose a file with a .db extension"
-
-
 DOING_WELL = "\"Performing Well\""
 TO_IMPROVE = "\"Needs Improvement\""
 NO_DB_EXISTS = "No Database exists in the Storage Folder. Please create one using the create Button"

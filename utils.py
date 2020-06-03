@@ -385,6 +385,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
             updateQueries.append("\"Speed Score\" = " + str(score))
             updateQueries.append("\"Speed Remarks\" = " + scorecalc.getRemarks(score))
             recordDict["Speed 50m Time"] = float(fiftytime)
+            recordDict["Speed Score"] = int(score)
             
     if(eighthundredtime != ""):
         userResponse = "no"
@@ -397,6 +398,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
             updateQueries.append("\"Endurance Score\" = " + str(score))
             updateQueries.append("\"Endurance Remarks\" = " + scorecalc.getRemarks(score))
             recordDict["Endurance 800m Time"] = float(eighthundredtime)
+            recordDict["Endurance Score"] = int(score)
             
     if(shotputdist != ""):
         userResponse = "no"
@@ -409,6 +411,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
             updateQueries.append("\"Strength Score\" = " + str(score))
             updateQueries.append("\"Strength Remarks\" = " + scorecalc.getRemarks(score))
             recordDict["Strength Shotput Distance"] = float(shotputdist)
+            recordDict["Strength Score"] = int(score)
 
     if(longjumpdist != ""):
         userResponse = "no"
@@ -422,6 +425,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
             updateQueries.append("\"Explosive Power Score\" = " + str(score))
             updateQueries.append("\"Explosive Power Remarks\" = " + scorecalc.getRemarks(score))
             recordDict["Explosive Longjump Distance"] = float(longjumpdist)
+            recordDict["Explosive Power Score"] = int(score)
 
     if(agilitytime != ""):
         userResponse = "no"
@@ -434,6 +438,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
             updateQueries.append("\"Agility Score\" = " + str(score))
             updateQueries.append("\"Agility Remarks\" = " + scorecalc.getRemarks(score))
             recordDict["Agility 60m Time"] = float(agilitytime)
+            recordDict["Agility Score"] = int(score)
             
     return updateQueries, recordDict
 
@@ -474,6 +479,23 @@ def updateTable(dbconn, updatequery):
         
     return True
     
+
+#Updates the Total score of the student after updating individual scores
+def updateTotalScore(tablename, recordDict):
+    allsportscore = ["Speed Score", "Endurance Score", "Strength Score", "Explosive Power Score", "Agility Score"]
+
+    total = 0
+    for sportscore in allsportscore:
+        if(recordDict[sportscore] != None and recordDict[sportscore] >=0 and recordDict[sportscore] <= 10):
+            total = total + recordDict[sportscore]
+
+    if total != 0:
+        recordDict["Total Score"] = total
+    
+    totalscoreupdatequery = "UPDATE " + tablename + " SET \"Total Marks\" = " + str(total) + " WHERE Roll_Number=" + str(recordDict["Roll_Number"])
+
+    return totalscoreupdatequery
+
 
 # Destroys all the frames when switching pagess
 def destroyframes(frames):
