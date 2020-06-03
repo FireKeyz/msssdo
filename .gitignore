@@ -1,0 +1,10 @@
+Exports/
+Backups/
+Logs/
+Storage/
+build/
+dist/
+__pycache__/
+dist1one/
+homepage.spec
+.vscode/

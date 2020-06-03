@@ -3,6 +3,7 @@ import csv
 import datetime
 import os
 import sqlite3
+import sys
 from pathlib import Path
 from tkinter import messagebox
 
@@ -62,6 +63,7 @@ def getStudentRecord(dbconn, currtable, studentRoll, studentName):
         logger.error("StackTrace : ",exc_info=True)
         return None
 
+
 # Connects with DB, throws an error if not possible
 def connectwithDB(dbpath):
     try:
@@ -91,6 +93,10 @@ def createtable(dbconn, tablename, schemafile):
     
     fielddict = {}
     for line in open(schemafile):
+        if len(line) == 0 or line == '\n':
+            continue
+        if line[0] in ( '!', '#' ):
+            continue
         field, datatype = line.split('=')
         fielddict[field.strip()] = datatype.strip()
 
@@ -153,6 +159,7 @@ def getSchemaFromTable(conn, currtable):
     finally:
         return templist
 
+
 # Called to export table to XLSX file
 def sqltoexcel(dbconn, currtable, exportfilepath):
 
@@ -201,7 +208,11 @@ def getdbfields(excelfields, fieldmapfile):
     fieldmapdict = {}
     
     for line in open(fieldmapfile):
-        excelfield, tablefield = line.split('=')
+        if len(line) == 0 or line == '\n':
+            continue
+        if line[0] in ( '!', '#' ):
+            continue
+        tablefield, excelfield = line.split('=')
         fieldmapdict[excelfield.strip()] = tablefield.strip()
         
     dbfields = []
@@ -213,7 +224,7 @@ def getdbfields(excelfields, fieldmapfile):
 	    else:
 		    irrelevantcolindices.append(i)
 
-    dbfields.append("Age") 
+    dbfields.append("Age")
 
     return dbfields, irrelevantcolindices
 
@@ -235,6 +246,9 @@ def academicyearstartdate(currtable):
 # Get the start of the academic year to calculate Age
 def getage(currtable, dob):
 
+    if dob == None:
+        return None
+
     startdate = academicyearstartdate(currtable)
 
     if not isinstance(dob, datetime.datetime):
@@ -252,12 +266,15 @@ def rowinserter(rowtoinsert, dbconn, currtable, dbfieldlist, numrows):
     try:
         updatecursor = dbconn.cursor()
         
-        insertquery = "INSERT INTO " + currtable + " " + str(tuple(dbfieldlist)) + " VALUES " + str(rowtoinsert)
-        logger.info(messages.INSERT_QUERY.format(insertquery))
+        insertquery = "INSERT INTO " + currtable + " " + str(tuple(dbfieldlist)) + " VALUES (" + "?, "*(len(dbfieldlist)-1) + "?" + ")"
         
-        updatecursor.execute(insertquery)
+        updatecursor.execute(insertquery, rowtoinsert)
         dbconn.commit()
-        
+    
+    except sqlite3.IntegrityError as ie:
+        logger.critical(messages.RECORD_EXISTS.format(currtable, rowtoinsert[dbfieldlist.index("Roll_Number")]))
+        logger.critical(ie, exc_info=True)
+        return numrows
     except sqlite3.Error as e:
         logger.critical(messages.INSERT_QUERY_FAILED.format(insertquery))
         logger.critical(e, exc_info=True)
@@ -278,11 +295,40 @@ def processdate(dob):
         newformat = str(dob.strftime('%d-%b-%Y'))
         return newformat
     else:
-        logger.info(messages.DOBVALUE.format(dob,type(dob)))
         return dob
-        
 
-# This function readied the queries to load the data from Excel to SQL
+
+#Prepare the student record values for loading by checking for Integrity, presence of Primary Key etc
+def preparevalues(datalist, irrelevantcolindices, dbfieldlist, currtable, rowstoload):
+    
+    dobindex = dbfieldlist.index("DOB")
+    rollindex = dbfieldlist.index("Roll_Number")
+    nameindex = dbfieldlist.index("Name")
+
+    poppeditems = 0
+
+    for eachindex in irrelevantcolindices:
+        del datalist[eachindex-poppeditems]
+        poppeditems = poppeditems + 1
+
+    if datalist[rollindex] == None:
+        logger.warning(messages.ROLL_NUM_EMPTY.format(rowstoload))
+        return False
+
+    if datalist[nameindex] == None:
+        logger.warning(messages.NAME_EMPTY.format(rowstoload))
+        return False
+
+    if not datalist[dobindex] is None:
+        datalist[dobindex] = processdate(datalist[dobindex])
+
+    datarow = tuple(datalist)
+
+    rowtoinsert = datarow + (getage(currtable, datarow[dobindex]),)
+    return rowtoinsert
+
+
+# This function readies the queries to load the data from Excel to SQL
 def exceltosql(dbconn, currtable, loadfilename, fieldmapfile):
 
     logger.info(messages.START_LOADING.format(currtable, loadfilename, fieldmapfile))
@@ -294,34 +340,24 @@ def exceltosql(dbconn, currtable, loadfilename, fieldmapfile):
     excelfields = next(colrowiter)
 
     dbfieldlist, irrelevantcolindices = getdbfields(excelfields, fieldmapfile)
-    print(dbfieldlist)
 
     logger.info(messages.DB_FIELD_LIST.format(dbfieldlist))
 
     rowstoload = 0
     insertedrows = 0
-    poppeditems = 0
 
     for datarow in ws.iter_rows(values_only=True, min_row=2):
-        if not datarow[0] is None:
+        if not all(v is None for v in datarow):
             rowstoload+=1
-            poppeditems = 0
             datalist = list(datarow)
             
-            for eachindex in irrelevantcolindices:
-                del datalist[eachindex-poppeditems]
-                poppeditems = poppeditems + 1
-                
-            if not datalist[len(datalist)-1] is None:
-                datalist[len(datalist)-1] = processdate(datalist[len(datalist)-1])
-                datarow = tuple(datalist)
-
-            rowtoinsert = datarow + (getage(currtable, datarow[len(datarow)-1]),)
-            print(rowtoinsert)
-            insertedrows = rowinserter(rowtoinsert, dbconn, currtable, dbfieldlist, insertedrows)
+            rowtoinsert = preparevalues(datalist, irrelevantcolindices, dbfieldlist, currtable, rowstoload)
+           
+            if rowtoinsert != False:
+                insertedrows = rowinserter(rowtoinsert, dbconn, currtable, dbfieldlist, insertedrows)
 
     logger.info(messages.ROW_DIFF.format(rowstoload, insertedrows))
-    return (rowstoload == insertedrows), insertedrows
+    return insertedrows, rowstoload
 
 
 # Gets the sport event timings and returns query to update
@@ -341,7 +377,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
     if(fiftytime != ""):
         userResponse = "no"
         if(recordDict["Speed 50m Time"] != None):
-            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for Height as " +
+            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for 50m Time as " +
                 str(recordDict["Speed 50m Time"]) + " Do you want to override that with the currently entered value?")
         if(recordDict["Speed 50m Time"] == None or userResponse == "yes"):
             updateQueries.append("\"Speed 50m Time\" = " + str(fiftytime))
@@ -353,7 +389,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
     if(eighthundredtime != ""):
         userResponse = "no"
         if(recordDict["Endurance 800m Time"] != None):
-            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for Height as " +
+            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for 800m Time as " +
                 str(recordDict["Endurance 800m Time"]) + " Do you want to override that with the currently entered value?")
         if(recordDict["Endurance 800m Time"] == None or userResponse == "yes"):
             updateQueries.append("\"Endurance 800m Time\" = " + str(eighthundredtime))
@@ -365,7 +401,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
     if(shotputdist != ""):
         userResponse = "no"
         if(recordDict["Strength Shotput Distance"] != None):
-            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for Height as " +
+            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for Shotput as " +
                 str(recordDict["Strength Shotput Distance"]) + " Do you want to override that with the currently entered value?")
         if(recordDict["Strength Shotput Distance"] == None or userResponse == "yes"):
             updateQueries.append("\"Strength Shotput Distance\" = " + str(shotputdist))
@@ -377,7 +413,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
     if(longjumpdist != ""):
         userResponse = "no"
         if(recordDict["Explosive Longjump Distance"] != None):
-            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for Height as " +
+            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for Long Jump as " +
                 str(recordDict["Explosive Longjump Distance"]) + " Do you want to override that with the currently entered value?")
         if(recordDict["Explosive Longjump Distance"] == None or userResponse == "yes"):
             updateQueries.append(
@@ -390,7 +426,7 @@ def getUpdateQueries(height, fiftytime, eighthundredtime, shotputdist, longjumpd
     if(agilitytime != ""):
         userResponse = "no"
         if(recordDict["Agility 60m Time"] != None):
-            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for Height as " +
+            userResponse = messagebox.askquestion(title="VALUE EXISTS", message="The chosen student already has a value for Agility Time as " +
                 str(recordDict["Agility 60m Time"]) + " Do you want to override that with the currently entered value?")
         if(recordDict["Agility 60m Time"] == None or userResponse == "yes"):
             updateQueries.append("\"Agility 60m Time\" = " + str(agilitytime))
@@ -449,7 +485,8 @@ def destroyframes(frames):
 #Backup Progress Bar
 def progress(status, remaining, total):
     print(f'Copied {total-remaining} of {total} pages...')
-    
+
+
 # Backs up the current DB just before quitting the App
 def backup(prjroot, storagefolder, backupfolder):
     
@@ -524,3 +561,16 @@ def verifySetup(prjroot, SERVER, CONFIG, BACKUPS, EXPORTS):
         logger.error(messages.UNEXPECTED_ERROR)
         logger.error("StackTrace : ",exc_info=True)
         return False
+
+
+#Fetch the path of the Logo bundled along with the Executable
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    logopath = os.path.join(base_path, relative_path) 
+    logger.info("Logo "+str(logopath))
+
+    return logopath
