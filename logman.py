@@ -12,11 +12,6 @@ LOG_FOLDER = "Logs"
 LOG_FILE = "msssdo.log"
 LOGGER_NAME = "loggy"
 
-def get_console_handler():
-   console_handler = logging.StreamHandler(sys.stdout)
-   console_handler.setFormatter(FORMATTER)
-   return console_handler
-
 def get_file_handler():
    
    if Path(LOG_FOLDER).is_dir:
@@ -34,8 +29,6 @@ def get_file_handler():
 def get_logger(logger_name):
    logger = logging.getLogger(logger_name)
    logger.setLevel(logging.INFO)
-   #Only for debugging purposes, not deploying
-   #logger.addHandler(get_console_handler())
    logger.addHandler(get_file_handler())
    logger.propagate = False
    return logger

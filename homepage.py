@@ -2,12 +2,9 @@ import datetime
 import glob
 import os
 import sqlite3
-import sys
 from pathlib import Path
 from tkinter import (END, Button, Entry, Frame, Label, LabelFrame, PhotoImage,
                      Tk, filedialog, messagebox, ttk)
-
-from jproperties import Properties
 
 import messages
 import scorecalc
@@ -155,6 +152,7 @@ def selectDB(dataLabel):
             logger.warn(messages.INVALID_DB_SELECTION)
             messagebox.showinfo(title="INVALID_DB_SELECTION", message = messages.INVALID_DB_SELECTION)
             dataLabel.configure(text="Currently not connected to any Database")
+            return
         else:
             dbname = os.path.basename(Path(dbpath))
             dbconn = utils.connectwithDB(dbpath)
@@ -226,14 +224,16 @@ def loadData(filedisplay):
         return
 
     fieldmapfile = Path(PROJECT_ROOT + os.path.sep + CONFIG + os.path.sep + FIELDMAP_FILE)
-    result, insertedrows = utils.exceltosql(dbconn, currtable, loadfilename, fieldmapfile)
+    insertedrows, rowstoload = utils.exceltosql(dbconn, currtable, loadfilename, fieldmapfile)
+
+    result = (insertedrows == rowstoload)
 
     if(result == True):
         logger.info(messages.DATA_LOAD_PASS.format(insertedrows, currtable, loadfilename))
         filedisplay.configure(text= str(insertedrows) + " records have been successfully uploaded to \n" + currtable)
     else:
         logger.info(messages.DATA_LOAD_FAIL.format(insertedrows, currtable, loadfilename))
-        messagebox.showerror(title="DATA_UPLOAD_ERROR",message=messages.DATA_UPLOAD_ERROR)
+        messagebox.showerror(title="DATA_UPLOAD_ERROR",message=messages.DATA_UPLOAD_ERROR.format(insertedrows,rowstoload))
 
 # Loader Page - Offers file selection via Windows explorer and Record loading option
 def loader():
@@ -269,8 +269,6 @@ def loader():
     allframes.append(middleframe)
     allframes.append(topframe)
     allframes.append(bottomframe)
-
-
 
 
 
@@ -479,8 +477,6 @@ def updater():
 
 
 
-
-
 ################################### EXPORT DATA WIDGETS ###########################################################
 # Opens the file dialog to let the user choose a Folder
 def chooseExportFolder(filedisplay):
@@ -564,7 +560,6 @@ def exporter():
     allframes.append(middleframe)
     allframes.append(topframe)
     allframes.append(bottomframe)
-
 
 
 
@@ -662,7 +657,6 @@ def quitapplication():
         
         window.destroy()
         window.quit()
-
 
 
 
@@ -769,27 +763,13 @@ def homescreen():
 
 ######################################### INITIALIZERS #################################################################
 logger.info(messages.APPLN_START)
-
 utils.verifySetup(PROJECT_ROOT, SERVER, CONFIG, BACKUPS, EXPORTS)
 
 # Entry point for the program, where homescreen is displayed first
 homescreen()
 
-#Since ICON is bundled with Exe, it needs to be fetched separately
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for Dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
-
-Logo = resource_path(ATHLETE_ICON_FILE)
-logger.info("Logo "+str(Logo))
-
 # Basic Root Window Initializations
+Logo = utils.resource_path(ATHLETE_ICON_FILE)
 window.iconphoto(True, PhotoImage(file=Logo))
 window.title('MSSSDO v1.0')
 window.geometry("750x850")
