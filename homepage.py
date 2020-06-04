@@ -789,7 +789,7 @@ homescreen()
 
 # Basic Root Window Initializations
 Logo = utils.resource_path(ATHLETE_ICON_FILE)
-#window.iconphoto(True, PhotoImage(file=Logo))
+window.iconphoto(True, PhotoImage(file=Logo))
 window.title('MSSSDO v1.0')
 window.geometry("750x850")
 window.protocol("WM_DELETE_WINDOW", quitapplication)
