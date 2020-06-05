@@ -8,3 +8,4 @@ __pycache__/
 dist1one/
 homepage.spec
 .vscode/
+.github/
