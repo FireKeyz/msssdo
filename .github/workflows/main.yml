@@ -30,3 +30,6 @@ jobs:
     - name: build with pyinstaller
       run: |
         pyinstaller.exe --onefile  --add-data 'Icons/athlete.png;.' --icon=Icons/athlete-big.ico homepage.py
+    - name: post run
+      run: |
+        echo 'Executable published'
