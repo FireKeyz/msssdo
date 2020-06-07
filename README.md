@@ -1,9 +1,7 @@
-#### MSSSDO 
-
-## What is MSSSDO?
+#### What is MSSSDO?
 MSSSDO is the *Middle School Student Sports Data Organizer* that is used to manage the Sports Data for middle school students for 5 different sports events.
 
-## What features does MSSSDO offer?
+### What features does MSSSDO offer?
 There are 4 main features :
 * **Select or Create Database & Tables**
   - The user can create a SQLite Database at the start or select one. The Table name will be constructed from the Class, Term & Year details and will be creaed if it does not exist.
@@ -18,7 +16,7 @@ There are 4 main features :
 * **Backup Database**
   - After every time you quit the Application, there is a backup of all the databases you have created inside a folder with it's name as the *current date*
 
-## How is the MSSSDO setup?
+### How is the MSSSDO setup?
 * **Backups** : This folder stores the backup of the databases in a Dated folders
 * **Exports** : This folder is the default location for exported workbooks
 * **Storage** : This folder is used to hold the Databases created by the users from the Application
