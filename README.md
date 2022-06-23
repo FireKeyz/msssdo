@@ -27,3 +27,16 @@ There are 4 main features :
 * **Icons** : This folder holds the 2 icons for the Tkinter window and the Executable
 * **ConfigFiles** : This folder holds the property files for *Table creation* & *Excel to SQL field map*
 * **Logs** : This folder contains the Logs generated from each run of the application. *Extensive logging - Ideal for debugging*
+
+## How to build & Use MSSSDO locally?
+
+* Should have installed version of Python > 3.6
+* All dependencies will be managed by Pip. So, have Pip installed and run the command - `pip install -r requirements.txt`
+* Post making changes to generate the executable, run below command :
+
+```python
+`pyinstaller.exe --onefile  --add-data "Icons/athlete.png;." --icon=Icons/athlete-big.ico homepage.py`
+```
+
+* Checkout the **dist** folder generated where the binary `msssdo.exe` will be present
+* Copy the 2 property files from **ConfigFiles** folder into the folder of same name that gets created the first time you start the executable.
