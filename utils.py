@@ -584,13 +584,12 @@ def verifySetup(prjroot, SERVER, CONFIG, BACKUPS, EXPORTS):
         logger.error("StackTrace : ",exc_info=True)
         return False
 
-
-#Fetch the path of the Logo bundled along with the Executable
 def resource_path(relative_path):
-    
-    base_path = os.path.abspath(".")
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
 
-    logopath = os.path.join(base_path, relative_path) 
-    logger.info("Logo "+str(logopath))
-
-    return logopath
+    return os.path.join(base_path, relative_path)
