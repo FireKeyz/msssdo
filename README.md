@@ -40,3 +40,7 @@ There are 4 main features :
 
 * Checkout the **dist** folder generated where the binary `msssdo.exe` will be present
 * Copy the 2 property files from **ConfigFiles** folder into the folder of same name that gets created the first time you start the executable.
+
+## Homepage Screenshot
+
+![Screenshot](Homepage.jpg)
