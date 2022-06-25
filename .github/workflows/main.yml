@@ -29,4 +29,4 @@ jobs:
         pip install -r requirements.txt
     - name: build with pyinstaller
       run: |
-        pyinstaller.exe --onefile  --add-data Icons/athlete.png;. --icon=Icons/athlete-big.ico homepage.py
+        pyinstaller.exe --onefile  --add-data "Icons/athlete.png;." --icon=Icons/athlete-big.ico homepage.py
